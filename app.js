@@ -8,10 +8,16 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 10000;
 
-// Initialize the Gemini client using your Render Environment Variable
+// Uses your Render Environment Variable
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-const upload = multer({ dest: 'uploads/' });
+const storage = multer.diskStorage({
+    destination: './uploads/',
+    filename: (req, file, cb) => {
+        cb(null, 'artifact-' + Date.now() + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
 
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
@@ -23,13 +29,13 @@ app.post('/analyze', upload.single('artifact'), async (req, res) => {
 
         const base64Image = fs.readFileSync(req.file.path).toString("base64");
 
-        // Using Gemini 2.5 Flash for high-quality identification
+        // Fixed for Gemini 2.5 Flash SDK 1.44.0
         const interaction = await ai.interactions.create({
             model: 'gemini-2.5-flash',
             input: [
                 { 
                     type: 'text', 
-                    text: "Act as a professional museum curator. Identify this artifact. Provide a bold, catchy Title. Then, write a detailed, 4-sentence historical description including its likely origin, time period, and cultural significance. Format your response exactly like this: Title: [Name] | Info: [Detailed History]" 
+                    text: "Act as a professional museum curator. Identify this artifact. Provide a bold Title. Then, write a detailed 4-sentence historical description. Format: Title: [Name] | Info: [Detailed History]" 
                 },
                 { 
                     type: 'image', 
@@ -39,36 +45,25 @@ app.post('/analyze', upload.single('artifact'), async (req, res) => {
             ]
         });
 
-        // The response text is now in interaction.text
-        const text = interaction.text || "";
-        
-        // Clean up the temp file from the server
+        // Clean up temp file
         fs.unlinkSync(req.file.path);
 
-        let title = "Ancient Discovery";
-        let info = text;
+        const text = interaction.text || "";
+        let title = "Ancient Discovery", info = text;
 
-        // Parsing the "Title | Info" format
         if (text.includes('|')) {
             const parts = text.split('|');
             title = parts[0].replace(/Title:/i, '').trim();
             info = parts[1].replace(/Info:/i, '').trim();
         }
 
-        res.json({ 
-            title, 
-            info, 
-            imageUrl: `/uploads/${req.file.filename}` 
-        });
+        res.json({ title, info, imageUrl: `/uploads/${req.file.filename}` });
 
     } catch (error) {
-        console.error("AI Analysis Error:", error);
+        console.error("AI Error:", error);
         if (req.file) fs.unlinkSync(req.file.path);
-        res.status(500).json({ 
-            title: "Scanner Offline", 
-            info: "The curator is currently unavailable. Check your API key and try again." 
-        });
+        res.status(500).json({ title: "Scanner Offline", info: "The curator is currently unavailable." });
     }
 });
 
-app.listen(port, () => console.log(`🚀 Artifact Scanner live on port ${port}`));
+app.listen(port, () => console.log(`🚀 Server on port ${port}`));
