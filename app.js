@@ -1,59 +1,71 @@
 const express = require('express');
 const multer = require('multer');
+const path = require('path');
 const fs = require('fs');
 const { GoogleGenAI } = require("@google/genai");
+const cloudinary = require('cloudinary').v2;
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 10000;
 
-// Initialize the Gemini client
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// Cloudinary Configuration
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-const upload = multer({ dest: 'uploads/' });
+// FIX: Pulls the key from Render's Environment Variables (GEMINI_API_KEY)
+const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY);
+
+const storage = multer.diskStorage({
+    destination: './uploads/',
+    filename: (req, file, cb) => {
+        cb(null, 'art-' + Date.now() + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
 
 app.use(express.static('public'));
-app.use('/uploads', express.static('uploads'));
 app.use(express.json());
 
 app.post('/analyze', upload.single('artifact'), async (req, res) => {
     try {
-        if (!req.file) return res.status(400).json({ error: 'No image provided.' });
+        if (!req.file) return res.status(400).json({ error: 'No file.' });
 
-        const base64Image = fs.readFileSync(req.file.path).toString("base64");
+        // 1. Permanent storage in Cloudinary
+        const cloudResult = await cloudinary.uploader.upload(req.file.path);
 
-        // Calling Gemini 2.5 Flash
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: [
-                {
-                    role: 'user',
-                    parts: [
-                        { text: "Identify this museum artifact. Respond ONLY in this format: Title: [Name] | Info: [Short Description]" },
-                        { inlineData: { data: base64Image, mimeType: req.file.mimetype } }
-                    ]
-                }
-            ]
-        });
+        // 2. AI Analysis using stable gemini-1.5-flash
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const imageData = fs.readFileSync(req.file.path).toString("base64");
 
-        const text = response.text || "";
-        let title = "Artifact Identified", info = text;
+        const result = await model.generateContent([
+            "Act as an expert museum curator. Identify this artifact. Format exactly as: Title: [Name] | Info: [4-5 sentence historical context]",
+            { inlineData: { data: imageData, mimeType: req.file.mimetype } }
+        ]);
 
-        // Smart parsing to avoid the "Unknown" error
+        const text = result.response.text();
+        
+        // Clean up the local temp file
+        fs.unlinkSync(req.file.path);
+
+        // Parse the AI response
+        let title = "Unidentified Artifact", info = text;
         if (text.includes('|')) {
             const parts = text.split('|');
             title = parts[0].replace(/Title:/i, '').trim();
             info = parts[1].replace(/Info:/i, '').trim();
-        } else if (text.length > 5) {
-            title = "Historical Artifact"; // Generic title if format is weird but description exists
         }
 
-        res.json({ title, info, imageUrl: `/uploads/${req.file.filename}` });
+        // Send back the Cloudinary URL and the parsed text
+        res.json({ title, info, imageUrl: cloudResult.secure_url });
 
     } catch (error) {
-        console.error("AI Error:", error);
-        res.status(500).json({ title: "Scanner Error", info: "The AI is currently unavailable." });
+        console.error("Server Error:", error);
+        res.status(500).json({ error: error.message });
     }
 });
 
-app.listen(port, () => console.log(`🚀 Server active on port ${port}`));
+app.listen(port, () => console.log(`🚀 Server running on port ${port}`));
