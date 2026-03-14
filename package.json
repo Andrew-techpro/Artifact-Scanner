@@ -1,7 +1,6 @@
 {
   "name": "artifact-scanner-v4",
   "version": "1.0.0",
-  "description": "AI-Powered Museum Artifact Scanner",
   "main": "app.js",
   "scripts": {
     "start": "node app.js"
