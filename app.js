@@ -1,14 +1,14 @@
 const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
-const path = require('path'); // Added for safer path handling
+const path = require('path');
 const { GoogleGenAI } = require("@google/genai");
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 10000; // Render usually uses 10000
+const port = process.env.PORT || 10000;
 
-// Initialize the Gemini client - it automatically looks for GEMINI_API_KEY env var
+// Initialize the Gemini client using your Render Environment Variable
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const upload = multer({ dest: 'uploads/' });
@@ -23,34 +23,32 @@ app.post('/analyze', upload.single('artifact'), async (req, res) => {
 
         const base64Image = fs.readFileSync(req.file.path).toString("base64");
 
-        // Calling Gemini 2.5 Flash - The unified SDK way
-        const response = await ai.models.generateContent({
+        // Using Gemini 2.5 Flash for high-quality identification
+        const interaction = await ai.interactions.create({
             model: 'gemini-2.5-flash',
-            contents: [
-                {
-                    role: 'user',
-                    parts: [
-                        { text: "Identify this museum artifact. Respond ONLY in this format: Title: [Name] | Info: [Short Description]" },
-                        { 
-                            inlineData: { 
-                                data: base64Image, 
-                                mimeType: req.file.mimetype 
-                            } 
-                        }
-                    ]
+            input: [
+                { 
+                    type: 'text', 
+                    text: "Act as a professional museum curator. Identify this artifact. Provide a bold, catchy Title. Then, write a detailed, 4-sentence historical description including its likely origin, time period, and cultural significance. Format your response exactly like this: Title: [Name] | Info: [Detailed History]" 
+                },
+                { 
+                    type: 'image', 
+                    data: base64Image, 
+                    mime_type: req.file.mimetype 
                 }
             ]
         });
 
-        // The new SDK returns text directly on the response object
-        const text = response.text || "";
+        // The response text is now in interaction.text
+        const text = interaction.text || "";
         
-        // Clean up the temp file immediately
+        // Clean up the temp file from the server
         fs.unlinkSync(req.file.path);
 
-        let title = "Historical Artifact";
+        let title = "Ancient Discovery";
         let info = text;
 
+        // Parsing the "Title | Info" format
         if (text.includes('|')) {
             const parts = text.split('|');
             title = parts[0].replace(/Title:/i, '').trim();
@@ -64,13 +62,11 @@ app.post('/analyze', upload.single('artifact'), async (req, res) => {
         });
 
     } catch (error) {
-        console.error("AI Error:", error);
-        // Clean up file even if AI fails
+        console.error("AI Analysis Error:", error);
         if (req.file) fs.unlinkSync(req.file.path);
-        
         res.status(500).json({ 
             title: "Scanner Offline", 
-            info: "The curator is currently unavailable. Please check your Render logs." 
+            info: "The curator is currently unavailable. Check your API key and try again." 
         });
     }
 });
