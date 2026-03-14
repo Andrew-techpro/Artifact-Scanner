@@ -6,57 +6,42 @@ const { GoogleGenAI } = require("@google/genai");
 require('dotenv').config();
 
 const app = express();
-
-// Use the port provided by the hosting service, or 3000 locally
 const port = process.env.PORT || 3000;
 
-// Use the API Key from environment variables for security
-const apiKey = process.env.GEMINI_API_KEY;
-const genAI = new GoogleGenAI(apiKey);
+// Initialize the new Gemini 3 SDK
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// Configure where uploaded images are stored
+// Set up image storage
 const storage = multer.diskStorage({
     destination: './uploads/',
     filename: (req, file, cb) => {
         cb(null, 'artifact-' + Date.now() + path.extname(file.originalname));
     }
 });
-
 const upload = multer({ storage: storage });
 
-// Middleware
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
 app.use(express.json());
 
-// Main AI Analysis Route
+// AI Analysis Route
 app.post('/analyze', upload.single('artifact'), async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'Please upload an image.' });
-        }
+        if (!req.file) return res.status(400).json({ error: 'No image uploaded.' });
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const imageData = fs.readFileSync(req.file.path).toString("base64");
+        const base64Image = fs.readFileSync(req.file.path).toString("base64");
 
-        const prompt = "Act as an expert museum curator. Identify this artifact. Provide a name and a detailed history. Format the response strictly as: Title: [Name] | Info: [Description]";
+        // Using the latest Gemini 3 Flash model for speed
+        const response = await ai.interactions.create({
+            model: 'gemini-3-flash',
+            input: [
+                { type: 'text', text: 'Identify this artifact. Provide a name and history. Format: Title: [Name] | Info: [Description]' },
+                { type: 'image', data: base64Image, mime_type: req.file.mimetype },
+            ],
+        });
 
-        const result = await model.generateContent([
-            prompt,
-            {
-                inlineData: {
-                    data: imageData,
-                    mimeType: req.file.mimetype
-                }
-            }
-        ]);
-
-        const response = await result.response;
-        const text = response.text();
-
-        // Splitting the AI response into Title and Info
-        let title = "Unknown Artifact";
-        let info = text;
+        const text = response.output_text || "";
+        let title = "Unknown Artifact", info = text;
 
         if (text.includes('|')) {
             const parts = text.split('|');
@@ -64,18 +49,12 @@ app.post('/analyze', upload.single('artifact'), async (req, res) => {
             info = parts[1].replace(/Info:/i, '').trim();
         }
 
-        res.json({
-            title,
-            info,
-            imageUrl: `/uploads/${req.file.filename}`
-        });
+        res.json({ title, info, imageUrl: `/uploads/${req.file.filename}` });
 
     } catch (error) {
-        console.error("AI Analysis Error:", error);
-        res.status(500).json({ error: "Failed to analyze the artifact." });
+        console.error("AI Error:", error);
+        res.status(500).json({ error: "AI Analysis failed." });
     }
 });
 
-app.listen(port, () => {
-    console.log(`🚀 Server is running at http://localhost:${port}`);
-});
+app.listen(port, () => console.log(`🚀 Server live at port ${port}`));
