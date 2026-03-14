@@ -8,10 +8,9 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Initialize the new Gemini 3 SDK
+// Initialize the GenAI client
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// Set up image storage
 const storage = multer.diskStorage({
     destination: './uploads/',
     filename: (req, file, cb) => {
@@ -24,23 +23,22 @@ app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
 app.use(express.json());
 
-// AI Analysis Route
 app.post('/analyze', upload.single('artifact'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ error: 'No image uploaded.' });
 
         const base64Image = fs.readFileSync(req.file.path).toString("base64");
 
-        // Using the latest Gemini 3 Flash model for speed
-        const response = await ai.interactions.create({
-            model: 'gemini-3-flash',
+        // Using Gemini 2.5 Flash for high-speed, high-reasoning scans
+        const interaction = await ai.interactions.create({
+            model: 'gemini-2.5-flash', 
             input: [
-                { type: 'text', text: 'Identify this artifact. Provide a name and history. Format: Title: [Name] | Info: [Description]' },
+                { type: 'text', text: 'Identify this artifact. Provide a name and a short history. Format your response exactly like this: Title: [Name] | Info: [Short History]' },
                 { type: 'image', data: base64Image, mime_type: req.file.mimetype },
             ],
         });
 
-        const text = response.output_text || "";
+        const text = interaction.output_text || "";
         let title = "Unknown Artifact", info = text;
 
         if (text.includes('|')) {
@@ -52,9 +50,9 @@ app.post('/analyze', upload.single('artifact'), async (req, res) => {
         res.json({ title, info, imageUrl: `/uploads/${req.file.filename}` });
 
     } catch (error) {
-        console.error("AI Error:", error);
-        res.status(500).json({ error: "AI Analysis failed." });
+        console.error("AI Scan Error:", error);
+        res.status(500).json({ error: "The AI scanner is currently unavailable." });
     }
 });
 
-app.listen(port, () => console.log(`🚀 Server live at port ${port}`));
+app.listen(port, () => console.log(`🚀 Artifact Scanner live on port ${port}`));
