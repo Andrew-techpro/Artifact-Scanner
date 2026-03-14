@@ -2,70 +2,64 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { GoogleGenAI } = require("@google/genai");
-const cloudinary = require('cloudinary').v2;
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 10000;
 
-// Cloudinary Configuration
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
-// FIX: Pulls the key from Render's Environment Variables (GEMINI_API_KEY)
-const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY);
+// Correct SDK initialization to prevent "is not a function" error
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const storage = multer.diskStorage({
     destination: './uploads/',
     filename: (req, file, cb) => {
-        cb(null, 'art-' + Date.now() + path.extname(file.originalname));
+        cb(null, 'artifact-' + Date.now() + path.extname(file.originalname));
     }
 });
 const upload = multer({ storage: storage });
 
 app.use(express.static('public'));
+app.use('/uploads', express.static('uploads'));
 app.use(express.json());
 
 app.post('/analyze', upload.single('artifact'), async (req, res) => {
     try {
-        if (!req.file) return res.status(400).json({ error: 'No file.' });
+        if (!req.file) return res.status(400).json({ error: 'Please upload an image.' });
 
-        // 1. Permanent storage in Cloudinary
-        const cloudResult = await cloudinary.uploader.upload(req.file.path);
-
-        // 2. AI Analysis using stable gemini-1.5-flash
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const imageData = fs.readFileSync(req.file.path).toString("base64");
+        // Using the 2.5 Flash model as you requested
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const base64Image = fs.readFileSync(req.file.path).toString("base64");
 
         const result = await model.generateContent([
-            "Act as an expert museum curator. Identify this artifact. Format exactly as: Title: [Name] | Info: [4-5 sentence historical context]",
-            { inlineData: { data: imageData, mimeType: req.file.mimetype } }
+            "Act as a professional museum curator. Identify this artifact. Format: Title: [Name] | Info: [Detailed History]",
+            { inlineData: { data: base64Image, mimeType: req.file.mimetype } }
         ]);
 
-        const text = result.response.text();
+        const response = await result.response;
+        const text = response.text();
         
-        // Clean up the local temp file
+        // Clean up local file after processing
         fs.unlinkSync(req.file.path);
 
-        // Parse the AI response
-        let title = "Unidentified Artifact", info = text;
+        let title = "Ancient Discovery";
+        let info = text;
+
         if (text.includes('|')) {
             const parts = text.split('|');
             title = parts[0].replace(/Title:/i, '').trim();
             info = parts[1].replace(/Info:/i, '').trim();
         }
 
-        // Send back the Cloudinary URL and the parsed text
-        res.json({ title, info, imageUrl: cloudResult.secure_url });
+        res.json({ title, info, imageUrl: `/uploads/${req.file.filename}` });
 
     } catch (error) {
-        console.error("Server Error:", error);
-        res.status(500).json({ error: error.message });
+        console.error("AI Analysis Error:", error);
+        res.status(500).json({ 
+            title: "Scanner Offline", 
+            info: "The curator is currently unavailable. Check your API key." 
+        });
     }
 });
 
-app.listen(port, () => console.log(`🚀 Server running on port ${port}`));
+app.listen(port, () => console.log(`🚀 Artifact Scanner live on port ${port}`));

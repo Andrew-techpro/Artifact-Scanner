@@ -1,12 +1,8 @@
 body {
-    background: #000000; /* Back to pure black */
-    color: #fff;
-    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background: #000 url('your-image-link.jpg') no-repeat center center fixed;
+    background-size: cover;
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
+    color: white;
 }
 
 .container {
