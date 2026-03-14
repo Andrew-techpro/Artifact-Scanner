@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Artifact AI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="upload-page" class="container">
+        <h1>Artifact AI</h1>
+        <div class="main-interface-box">
+            <input type="file" id="artifactInput" style="display:none" onchange="updateFileName()">
+            <label for="artifactInput" class="btn-secondary clickable-label" style="color:#fff;">Select Artifact</label>
+            <p id="file-chosen" style="margin-top:20px; color:#555;">No file selected</p>
+            <div style="margin-top:40px;">
+                <button class="btn-primary" onclick="analyzeArtifact()">Analyze Artifact</button>
+                <button class="btn-secondary" onclick="showCollection()" style="margin-left:10px;">Collection</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="result-page" class="container hidden">
+        <h2 id="resTitle" style="font-size: 2.8rem; margin-bottom: 20px;"></h2>
+        <div class="result-layout">
+            <img id="resImg" class="result-image" src="">
+            <div class="info-content">
+                <p id="resInfo" class="info-text"></p>
+                <div style="margin-top: 40px;">
+                    <button class="btn-save" onclick="saveToCollection()">Save to Collection</button>
+                    <button class="btn-discard" onclick="goBack()">Discard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="collection-page" class="container hidden">
+        <h1>Your Collection</h1>
+        <div id="collection-grid"></div>
+        <button class="btn-secondary" onclick="goBack()">Back to Scanner</button>
+    </div>
+
+    <div id="detail-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:1000; display:flex; align-items:center; justify-content:center;">
+        <div style="max-width:900px; padding:40px;">
+            <h2 id="detailTitle"></h2>
+            <img id="detailImage" style="max-height:50vh; border-radius:20px; margin:20px 0; border:1px solid #333;">
+            <p id="detailInfo" style="text-align:left; color:#888;"></p>
+            <button class="btn-secondary" onclick="closeDetail()" style="margin-top:30px; color:#fff;">Close</button>
+        </div>
+    </div>
+
+    <div id="delete-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; display:flex; align-items:center; justify-content:center;">
+        <div style="background:#111; padding:40px; border-radius:24px; border:1px solid #333; text-align:center;">
+            <h3>Remove from Collection?</h3>
+            <button class="btn-discard" id="confirmDelete">Remove</button>
+            <button class="btn-secondary" onclick="document.getElementById('delete-modal').classList.add('hidden')" style="margin-left:10px; color:#fff;">Cancel</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

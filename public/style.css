@@ -1,0 +1,133 @@
+body {
+    background: #060606;
+    color: #fff;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 60px auto;
+    text-align: center;
+}
+
+.hidden { display: none !important; }
+
+h1 {
+    font-size: 3.5rem;
+    font-weight: 900;
+    letter-spacing: -1px;
+    margin-bottom: 40px;
+    background: linear-gradient(90deg, #fff, #444, #fff);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 4s linear infinite;
+}
+
+@keyframes shine { to { background-position: 200% center; } }
+
+.main-interface-box {
+    background: #111;
+    padding: 60px;
+    border-radius: 28px;
+    border: 1px solid #222;
+    transition: all 0.5s ease;
+    min-width: 480px;
+}
+
+.main-interface-box:hover {
+    border-color: #666;
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.05);
+}
+
+button, .clickable-label {
+    position: relative;
+    overflow: hidden;
+    padding: 16px 32px;
+    border-radius: 12px;
+    border: 1px solid transparent; /* Added to prevent jumping when border appears */
+    cursor: pointer;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+}
+
+.btn-primary { background: #fff; color: #000; }
+.btn-secondary { background: #222; color: #888; border: 1px solid #333; }
+.btn-save { background: #28a745; color: white; margin-right: 15px; }
+.btn-discard { background: #dc3545; color: white; }
+
+.scanning::after {
+    content: "";
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 15px #fff;
+    transform: rotate(45deg);
+    animation: scan 1.5s infinite;
+}
+
+@keyframes scan {
+    0% { top: -100%; left: -100%; }
+    100% { top: 150%; left: 150%; }
+}
+
+.result-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 50px;
+    text-align: left;
+    margin-top: 40px;
+    background: #111;
+    padding: 50px;
+    border-radius: 24px;
+    border: 1px solid #222;
+    align-items: start;
+}
+
+.result-image {
+    width: 100%;
+    max-height: 500px;
+    object-fit: contain;
+    border-radius: 16px;
+    border: 1px solid #333;
+}
+
+.info-text {
+    font-size: 1.15rem;
+    line-height: 1.9;
+    color: #aaa;
+}
+
+#collection-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 25px;
+    margin: 40px 0;
+}
+
+.card {
+    background: #111;
+    padding: 20px;
+    border-radius: 20px;
+    border: 1px solid #222;
+    width: 260px;
+}
+
+/* --- BUTTON BORDER HOVER FIXES --- */
+
+/* ANALYZE BUTTON: Turns Black Border on hover */
+#analyze-btn:hover {
+    border: 1px solid #000000 !important;
+}
+
+/* REMOVE BUTTON (In the Collection Card): Turns White Border on hover */
+.card button:hover {
+    border: 1px solid #ffffff !important;
+}
