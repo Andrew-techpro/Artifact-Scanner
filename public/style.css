@@ -1,63 +1,47 @@
-/* Reset to solid black look */
 body {
-    background-color: #000000; /* Pure Black */
-    color: #ffffff; /* White text for contrast */
+    background-color: #000000;
+    color: #ffffff;
     margin: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    min-height: 100vh;
-}
-
-.container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 40px 20px;
+    font-family: 'Segoe UI', Arial, sans-serif;
     text-align: center;
 }
 
-/* Solid cards instead of transparent glass */
-.artifact-card, .analyzer-box {
-    background: #1a1a1a; /* Dark gray for subtle depth */
-    border: 1px solid #333333;
-    border-radius: 12px;
-    padding: 25px;
-    margin: 20px auto;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-}
-
-.artifact-card img, .analyzer-box img {
-    width: 100%;
-    max-width: 400px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-}
-
-/* Collection Grid */
-.collection-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+.container {
+    max-width: 800px;
+    margin: 0 auto;
     padding: 20px;
 }
 
-/* Button Styling */
+/* Original simple card style */
+.artifact-card {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 15px 0;
+}
+
+.artifact-card img {
+    max-width: 100%;
+    border-radius: 5px;
+}
+
+.collection-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+}
+
 button {
     padding: 10px 20px;
-    border-radius: 6px;
+    margin: 5px;
     border: none;
-    font-weight: bold;
+    border-radius: 5px;
     cursor: pointer;
-    transition: background 0.2s;
+    font-weight: bold;
 }
 
 .save-btn { background-color: #28a745; color: white; }
 .discard-btn { background-color: #dc3545; color: white; }
-.remove-btn { 
-    background-color: transparent; 
-    color: #ff4d4d; 
-    border: 1px solid #dc3545; 
-    width: 100%;
-}
-
-button:hover {
-    opacity: 0.9;
-}
+.remove-btn { background: none; border: 1px solid #dc3545; color: #dc3545; width: 100%; }
