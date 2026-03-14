@@ -1,55 +1,63 @@
+/* Reset to solid black look */
 body {
-    background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
-                      url('https://res.cloudinary.com/df4wgiohk/image/upload/v1773497293/Captur%C4%83_de_ecran_2026-03-14_160749_aqi0ub.png');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    color: white;
+    background-color: #000000; /* Pure Black */
+    color: #ffffff; /* White text for contrast */
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     min-height: 100vh;
 }
 
 .container {
-    max-width: 1000px;
+    max-width: 900px;
     margin: 0 auto;
     padding: 40px 20px;
     text-align: center;
 }
 
-/* Glass-effect cards for the analyzer and collection */
+/* Solid cards instead of transparent glass */
 .artifact-card, .analyzer-box {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    padding: 30px;
+    background: #1a1a1a; /* Dark gray for subtle depth */
+    border: 1px solid #333333;
+    border-radius: 12px;
+    padding: 25px;
     margin: 20px auto;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
-.artifact-card img {
+.artifact-card img, .analyzer-box img {
     width: 100%;
     max-width: 400px;
-    border-radius: 12px;
-    margin-bottom: 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
 }
 
+/* Collection Grid */
 .collection-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 25px;
+    gap: 20px;
     padding: 20px;
 }
 
+/* Button Styling */
 button {
-    padding: 12px 24px;
-    border-radius: 8px;
+    padding: 10px 20px;
+    border-radius: 6px;
     border: none;
     font-weight: bold;
     cursor: pointer;
-    transition: 0.3s;
+    transition: background 0.2s;
 }
 
 .save-btn { background-color: #28a745; color: white; }
-.discard-btn { background-color: #dc3545; color: white; margin-left: 10px; }
+.discard-btn { background-color: #dc3545; color: white; }
+.remove-btn { 
+    background-color: transparent; 
+    color: #ff4d4d; 
+    border: 1px solid #dc3545; 
+    width: 100%;
+}
+
+button:hover {
+    opacity: 0.9;
+}
