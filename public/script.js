@@ -15,6 +15,7 @@ function resetUI() {
 async function analyzeArtifact() {
     const fileInput = document.getElementById('artifactInput');
     if (!fileInput.files[0]) return;
+    
     const btn = document.querySelector('.btn-primary');
     btn.innerText = "Scanning...";
     btn.classList.add('scanning');
@@ -25,14 +26,20 @@ async function analyzeArtifact() {
     try {
         const res = await fetch('/analyze', { method: 'POST', body: formData });
         const data = await res.json();
+        
+        if (data.error) throw new Error(data.error);
+
         currentArtifact = data;
         document.getElementById('resImg').src = data.imageUrl;
         document.getElementById('resTitle').innerText = data.title;
         document.getElementById('resInfo').innerText = data.info;
+        
         document.getElementById('upload-page').classList.add('hidden');
         document.getElementById('result-page').classList.remove('hidden');
-    } catch (err) { alert("Error."); }
-    finally {
+    } catch (err) { 
+        console.error(err);
+        alert("Error analyzing artifact. Check server logs."); 
+    } finally {
         btn.innerText = "Analyze Artifact";
         btn.classList.remove('scanning');
     }
@@ -55,8 +62,10 @@ function saveToCollection() {
 function showCollection() {
     document.getElementById('upload-page').classList.add('hidden');
     document.getElementById('collection-page').classList.remove('hidden');
+    
     const grid = document.getElementById('collection-grid');
     const col = JSON.parse(localStorage.getItem('artifacts')) || [];
+    
     grid.innerHTML = col.map((item, i) => `
         <div class="card">
             <div style="cursor:pointer" onclick="openDetail(${i})">
@@ -84,6 +93,7 @@ function confirmDeletePrompt(i) {
     document.getElementById('delete-modal').classList.remove('hidden');
 }
 
+// Logic for the Remove button inside the popup
 document.getElementById('confirmDelete').onclick = function() {
     let col = JSON.parse(localStorage.getItem('artifacts'));
     col.splice(deleteIndex, 1);
