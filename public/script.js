@@ -69,7 +69,8 @@ function showCollection() {
 }
 
 function openDetail(i) {
-    const item = JSON.parse(localStorage.getItem('artifacts'))[i];
+    const col = JSON.parse(localStorage.getItem('artifacts'));
+    const item = col[i];
     document.getElementById('detailTitle').innerText = item.title;
     document.getElementById('detailImage').src = item.imageUrl;
     document.getElementById('detailInfo').innerText = item.info;
