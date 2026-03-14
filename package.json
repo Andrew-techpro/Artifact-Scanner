@@ -1,15 +1,14 @@
 {
-  "name": "artifact-scanner",
+  "name": "artifact-scanner-v4",
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
     "start": "node app.js"
   },
   "dependencies": {
-    "@google/genai": "^0.21.0",
-    "cloudinary": "^2.5.1",
+    "@google/genai": "^1.44.0",
     "dotenv": "^16.4.5",
-    "express": "^4.21.0",
+    "express": "^4.19.2",
     "multer": "^1.4.5-lts.1"
   }
 }
